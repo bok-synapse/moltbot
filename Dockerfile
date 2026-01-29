@@ -15,14 +15,12 @@ ENV PATH="/home/node/.local/bin:/home/node/.bun/bin:$PATH"
 ENV UV_INSTALL_DIR="/home/node/.local"
 ENV BUN_INSTALL="/home/node/.bun"
 
-# Install package managers
+# Install package managers and CLI tools
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && curl -fsSL https://bun.sh/install | bash
-
-# Install CLI tools
-RUN uv tool install notebooklm-mcp-server \
-    && uv tool install khal \
-    && uv tool install vdirsyncer
+    && curl -fsSL https://bun.sh/install | bash \
+    && /home/node/.local/bin/uv tool install notebooklm-mcp-server \
+    && /home/node/.local/bin/uv tool install khal \
+    && /home/node/.local/bin/uv tool install vdirsyncer
 
 # Prepare directories and create symlinks for persistence
 RUN mkdir -p /home/node/.config /home/node/.local/share \
