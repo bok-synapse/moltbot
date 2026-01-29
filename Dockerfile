@@ -5,8 +5,9 @@ USER root
 # System dependencies
 RUN apt-get update && apt-get install -y curl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Install uv system-wide (to /usr/local/bin)
-RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local sh
+# Install uv system-wide (to /usr/local/bin) with correct permissions
+RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local sh \
+    && chmod 755 /usr/local/bin/uv
 
 # Create persistence structure
 RUN mkdir -p /persistence/config /persistence/data \
