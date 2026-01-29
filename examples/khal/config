@@ -1,0 +1,23 @@
+# khal configuration
+# Copy this to: config/persistence/config/khal/config
+#
+# khal reads calendars from the same directory that vdirsyncer writes to.
+# Make sure vdirsyncer is configured and has run at least once.
+
+[calendars]
+[[baikal]]
+path = ~/.local/share/vdirsyncer/calendars/*
+type = discover
+
+[default]
+default_calendar = baikal
+
+[locale]
+timeformat = %H:%M
+dateformat = %d/%m/%Y
+longdateformat = %d/%m/%Y
+datetimeformat = %d/%m/%Y %H:%M
+longdatetimeformat = %d/%m/%Y %H:%M
+
+[sqlite]
+path = ~/.local/share/khal/khal.db

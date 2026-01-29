@@ -1,5 +1,12 @@
 # Persistence (local dev only, VPS has its own)
 persistence/
+config/
+
+# Warp state
+warp/data/
+
+# Workspace
+workspace/
 
 # Secrets
 .env

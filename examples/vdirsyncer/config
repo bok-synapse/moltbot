@@ -1,0 +1,30 @@
+# vdirsyncer configuration for Baikal CalDAV
+# Copy this to: config/persistence/config/vdirsyncer/config
+#
+# Environment variables used (set in .env):
+#   BAIKAL_URL      - e.g., https://dav.yourdomain.com/dav.php/
+#   BAIKAL_USERNAME - your Baikal username
+#   BAIKAL_PASSWORD - your Baikal password
+#
+# After setup, run:
+#   docker exec -it moltbot-gateway vdirsyncer discover
+#   docker exec -it moltbot-gateway vdirsyncer sync
+
+[general]
+status_path = "~/.local/share/vdirsyncer/status/"
+
+[pair baikal_calendars]
+a = "baikal_local"
+b = "baikal_remote"
+collections = ["from a", "from b"]
+
+[storage baikal_local]
+type = "filesystem"
+path = "~/.local/share/vdirsyncer/calendars/"
+fileext = ".ics"
+
+[storage baikal_remote]
+type = "caldav"
+url.fetch = ["command", "sh", "-c", "echo $BAIKAL_URL"]
+username.fetch = ["command", "sh", "-c", "echo $BAIKAL_USERNAME"]
+password.fetch = ["command", "sh", "-c", "echo $BAIKAL_PASSWORD"]

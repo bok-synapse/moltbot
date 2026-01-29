@@ -1,13 +1,102 @@
-# VPS Production docker-compose
+# Production docker-compose for VPS deployment
 # Uses pre-built image from GHCR
+# Requires: warp service running on same network (see warp/docker-compose.yml)
 
 services:
-  moltbot:
+  moltbot-gateway:
     image: ghcr.io/bok-synapse/moltbot:latest
+    container_name: moltbot-gateway
     restart: unless-stopped
+    working_dir: /app
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      BROWSER: echo
+      TZ: Asia/Kolkata
+      # Proxy Jina traffic through Warp (separate compose, same network)
+      HTTPS_PROXY: socks5://warp:1080
+      HTTP_PROXY: socks5://warp:1080
+      NO_PROXY: localhost,127.0.0.1,moltbot-gateway,caddy
+      # Moltbot config
+      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
+      CLAWDBOT_GATEWAY_PASSWORD: ${CLAWDBOT_GATEWAY_PASSWORD:-}
+      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan}
+      # API keys
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+      # Baikal/vdirsyncer (for .fetch commands in config)
+      BAIKAL_URL: ${BAIKAL_URL}
+      BAIKAL_USERNAME: ${BAIKAL_USERNAME}
+      BAIKAL_PASSWORD: ${BAIKAL_PASSWORD}
     volumes:
-      - ./persistence:/persistence
-    env_file:
-      - .env
-    ports:
-      - "3000:3000"
+      - ./config/moltbot:/home/node/.clawdbot
+      - ./workspace:/home/node/clawd
+      - ./config/persistence:/persistence
+    init: true
+    command:
+      - node
+      - dist/index.js
+      - gateway
+      - --bind
+      - ${CLAWDBOT_GATEWAY_BIND:-lan}
+      - --port
+      - ${CLAWDBOT_GATEWAY_PORT:-18789}
+    networks:
+      - caddy
+    labels:
+      caddy: ${URL}
+      caddy.reverse_proxy: "{{upstreams 18789}}"
+      caddy.reverse_proxy.header_up: "Host {host}"
+      caddy.reverse_proxy.header_up_1: "X-Real-IP {remote_host}"
+      caddy.reverse_proxy.header_up_2: "X-Forwarded-Proto https"
+      caddy.reverse_proxy.flush_interval: "-1"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - dist/index.js
+        - health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  moltbot-cli:
+    image: ghcr.io/bok-synapse/moltbot:latest
+    container_name: moltbot-cli
+    profiles:
+      - cli
+    working_dir: /app
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      BROWSER: echo
+      TZ: Asia/Kolkata
+      CLAWDBOT_GATEWAY_URL: ws://moltbot-gateway:18789
+      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
+      CLAWDBOT_GATEWAY_PASSWORD: ${CLAWDBOT_GATEWAY_PASSWORD:-}
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+      BAIKAL_URL: ${BAIKAL_URL}
+      BAIKAL_USERNAME: ${BAIKAL_USERNAME}
+      BAIKAL_PASSWORD: ${BAIKAL_PASSWORD}
+    volumes:
+      - ./config/moltbot:/home/node/.clawdbot
+      - ./workspace:/home/node/clawd
+      - ./config/persistence:/persistence
+    stdin_open: true
+    tty: true
+    command:
+      - node
+      - dist/index.js
+    networks:
+      - caddy
+    depends_on:
+      moltbot-gateway:
+        condition: service_healthy
+
+networks:
+  caddy:
+    external: true
