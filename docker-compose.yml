@@ -1,0 +1,12 @@
+# Local development docker-compose
+# Build and test locally before pushing
+
+services:
+  moltbot:
+    build: .
+    volumes:
+      - ./persistence:/persistence
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
