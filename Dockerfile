@@ -1,4 +1,4 @@
-FROM ghcr.io/moltbot/moltbot:main
+FROM moltbot/moltbot:latest
 
 USER root
 
