@@ -3,9 +3,9 @@
 # Requires: warp service running on same network (see warp/docker-compose.yml)
 
 services:
-  moltbot-gateway:
+  openclaw-gateway:
     image: ghcr.io/bok-synapse/moltbot:latest
-    container_name: moltbot-gateway
+    container_name: openclaw-gateway
     restart: unless-stopped
     working_dir: /app
     environment:
@@ -16,11 +16,11 @@ services:
       # Proxy Jina traffic through Warp (separate compose, same network)
       HTTPS_PROXY: socks5://warp:1080
       HTTP_PROXY: socks5://warp:1080
-      NO_PROXY: localhost,127.0.0.1,moltbot-gateway,caddy
-      # Moltbot config
-      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
-      CLAWDBOT_GATEWAY_PASSWORD: ${CLAWDBOT_GATEWAY_PASSWORD:-}
-      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan}
+      NO_PROXY: localhost,127.0.0.1,openclaw-gateway,caddy
+      # OpenClaw config
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD:-}
+      OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-lan}
       # API keys
       DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
@@ -36,8 +36,8 @@ services:
       BAIKAL_USERNAME: ${BAIKAL_USERNAME}
       BAIKAL_PASSWORD: ${BAIKAL_PASSWORD}
     volumes:
-      - ./config/moltbot:/home/node/.moltbot
-      - ./workspace:/home/node/molt
+      - ./config/openclaw:/home/node/.openclaw
+      - ./workspace:/home/node/claw
       - ./config/persistence:/persistence
     init: true
     command:
@@ -45,9 +45,9 @@ services:
       - dist/index.js
       - gateway
       - --bind
-      - ${CLAWDBOT_GATEWAY_BIND:-lan}
+      - ${OPENCLAW_GATEWAY_BIND:-lan}
       - --port
-      - ${CLAWDBOT_GATEWAY_PORT:-20663}
+      - ${OPENCLAW_GATEWAY_PORT:-20663}
     networks:
       - caddy
     labels:
@@ -68,9 +68,9 @@ services:
       retries: 3
       start_period: 30s
 
-  moltbot-cli:
+  openclaw-cli:
     image: ghcr.io/bok-synapse/moltbot:latest
-    container_name: moltbot-cli
+    container_name: openclaw-cli
     profiles:
       - cli
     working_dir: /app
@@ -79,9 +79,9 @@ services:
       TERM: xterm-256color
       BROWSER: echo
       TZ: Asia/Kolkata
-      CLAWDBOT_GATEWAY_URL: ws://moltbot-gateway:20663
-      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
-      CLAWDBOT_GATEWAY_PASSWORD: ${CLAWDBOT_GATEWAY_PASSWORD:-}
+      OPENCLAW_GATEWAY_URL: ws://openclaw-gateway:20663
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD:-}
       DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
@@ -93,8 +93,8 @@ services:
       BAIKAL_USERNAME: ${BAIKAL_USERNAME}
       BAIKAL_PASSWORD: ${BAIKAL_PASSWORD}
     volumes:
-      - ./config/moltbot:/home/node/.moltbot
-      - ./workspace:/home/node/molt
+      - ./config/openclaw:/home/node/.openclaw
+      - ./workspace:/home/node/claw
       - ./config/persistence:/persistence
     stdin_open: true
     tty: true
@@ -104,7 +104,7 @@ services:
     networks:
       - caddy
     depends_on:
-      moltbot-gateway:
+      openclaw-gateway:
         condition: service_healthy
 
 networks:

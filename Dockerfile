@@ -1,4 +1,4 @@
-FROM moltbot/moltbot:latest
+FROM ghcr.io/openclaw/openclaw:latest
 
 USER root
 
